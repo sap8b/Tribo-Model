@@ -145,14 +145,14 @@ function multi_AFM_scan
     % $i_{passive} - represents the current from the passivated surface at
     % long times
     %=====================================================================    
-    i0_pass = [1.0, 1.0, 1.0, 1.0, 1.0].*1.0e-2;%A/cm2
+    i0_pass = [1.0, 1.0, 0.01, 1.0, 1.0].*1.0e-2;%A/cm2
     %=====================================================================
     % $E_{film}$ - represents the electric field that is set up across the
     % oxide layer between the metal surface and the electrolyte due to
     % sepration of positive metal ions and electrons
     %=====================================================================
 %     E_film = [0.38, 0.6, 0.76, 0.80, 0.90];
-    E_film = [0.5, 0.8, 0.8, 0.8, 0.8]; % V/nm
+    E_film = [0.5, 0.8, 0.9, 0.8, 0.8]; % V/nm
     %=====================================================================
     %=====================================================================
     % Create a simulation parameter structure to assist with passing the
@@ -182,7 +182,7 @@ function multi_AFM_scan
     end
     
     
-    for idx_iteration = 1:1 %number_of_scans
+    for idx_iteration = 3:3 %number_of_scans
         tribo_analysis_roughness_3(sim(idx_iteration));
     end
     %=====================================================================
