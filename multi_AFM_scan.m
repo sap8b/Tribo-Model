@@ -129,30 +129,34 @@ function multi_AFM_scan
     %=====================================================================
 %     alpha0 = [0.32, 0.385, 0.40, 0.42, 0.421];
 %     alpha0 = [0.32, 0.40, 0.49, 0.49, 0.51];
-    alpha0 = [0.32, 0.37, 0.38, 0.33, 0.33];
+%     alpha0 = [0.32, 0.37, 0.38, 0.392755, 0.405165];
+    alpha0 = mdl_a_plus(L_base); 
     %=====================================================================
     % $i_{0,monolayer}$ - represents the current due to the formation of 
     % initial monolayer of oxide
     %=====================================================================
-    i0_monolayer = [1.0, 1.0, 1.0, 0.3, 0.3] .*1.0e-3; %A/cm2
+    i0_monolayer = [1.0, 1.0, 1.0, 1.0, 1.0] .*1.0e-3; %A/cm2
 %     i0_growth_base = [12.0, 2.0, 0.07, 0.06, 0.03] .* 1.0e-10; %A/cm2
 %     i0_growth_base = [14.0, 3.0, 0.4, 14.0, 14.0] .* 1.0e-10; %A/cm2
     %=====================================================================
     % $i_{growth}$ - represents the current from the high-field film growth
     %=====================================================================
-    i0_growth_base = [10, 1.28, 0.5, 14.0, 14.0] .* node_area_cm2; %A/cm2
+%     i0_growth_base = [10, 1.28, 0.5, 0.3, 0.2] .* node_area_cm2; %A/cm2
+    i0_growth_base = mdl_ig(L_base); %A/cm2
     %=====================================================================
     % $i_{passive} - represents the current from the passivated surface at
     % long times
     %=====================================================================    
-    i0_pass = [1.0, 0.1, 0.01, 1.0, 1.0].*1.0e-2;%A/cm2
+%     i0_pass = [1.0, 0.1, 0.01, 0.001976, 0.000103].*1.0e-2;%A/cm2
+    i0_pass = mdl_ip(L_base); %A/cm2
     %=====================================================================
     % $E_{film}$ - represents the electric field that is set up across the
     % oxide layer between the metal surface and the electrolyte due to
     % sepration of positive metal ions and electrons
     %=====================================================================
 %     E_film = [0.38, 0.6, 0.76, 0.80, 0.90];
-    E_film = [0.5, 0.8, 0.9, 0.8, 0.8]; % V/nm
+%     E_film = [0.5, 0.8, 0.9, 0.93, 0.935]; % V/nm
+    E_film = mdl_ef(L_base); % V/nm
     %=====================================================================
     %=====================================================================
     % Create a simulation parameter structure to assist with passing the
@@ -182,7 +186,7 @@ function multi_AFM_scan
     end
     
     
-    for idx_iteration = 2:2 %number_of_scans
+    for idx_iteration = 1:number_of_scans
         tribo_analysis_roughness_3(sim(idx_iteration));
     end
     %=====================================================================
