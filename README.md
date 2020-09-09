@@ -1,5 +1,5 @@
 # Tribo-Model
-<img src = "https://github.com/sap8b/Tribo-Model/blob/master/TriboModel.png" align = "right" width = "200" height = "200">
+<img src = "https://github.com/sap8b/Tribo-Model/blob/master/Exp Setup Diagram.png" align = "right" width = "400" height = "200">
 Matlab code for modeling the electrochemical current from the tribological contact between an AFM tip and a polarized stainless steel oxide in a corrosive electrolyte.
 
 ## Introduction
