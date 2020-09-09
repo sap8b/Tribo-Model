@@ -142,7 +142,7 @@ function multi_AFM_scan
     % $i_{growth}$ - represents the current from the high-field film growth
     %=====================================================================
 %     i0_growth_base = [10, 1.28, 0.5, 0.3, 0.2] .* node_area_cm2; %A/cm2
-    i0_growth_base = mdl_ig(L_base); %A/cm2
+    i0_growth_base = mdl_ig(L_base).* node_area_cm2; %A/cm2
     %=====================================================================
     % $i_{passive} - represents the current from the passivated surface at
     % long times
