@@ -1,6 +1,7 @@
 function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
     AFM_scan_3(x_pos, y_pos, z_pos, N_nodes, scan_ts, relax_time_ts, actual_ts, ...
-    dt, tip, sub, L, v_tip, eta_base, alpha0, i0_growth_base, E_film, i0_monolayer_base, i0_passive_base)
+    dt, tip, sub, L, v_tip, eta_base, alpha0, i0_growth_base, E_film, ...
+    i0_monolayer_base, i0_passive_base, cutoff)
     %=====================================================================
     % This function models a simple AFM tip scan
     %=====================================================================
@@ -71,6 +72,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
     [r_damage_m, depth_m, p_max] = Hertzian_Contact(E_tip, nu_tip, E_substrate, nu_substrate, L, R_AFM_tip);
     r_damage_nm = r_damage_m * 1.0e9;
     depth_nm = depth_m * 1.0e9;
+    
     % This conditional check puts limits the damage radius to the AFM tip
     % radius.  This restriction may be lifted after further testing
     if r_damage_nm > (R_AFM_tip * 1.0e9)
@@ -119,6 +121,9 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
             oxide(node_counter).initiation_time = 0.0;
             oxide(node_counter).rebuild_time = 0.0;
             oxide(node_counter).has_damage = 0;
+            oxide(node_counter).cutoff_state = 0; %Off = 0, On = 1
+            oxide(node_counter).cutoff_current = 0.0;
+            oxide(node_counter).cutoff_time = 0.0;
             node_counter = node_counter + 1;
         end
     end
@@ -150,6 +155,9 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
     tip_ts = 1;
     for idx_time = 1:actual_ts
        sim_time(idx_time,1) = (idx_time-1)*dt; %s
+%        if sim_time(idx_time,1) >= 80
+%            disp(sim_time(idx_time,1))
+%        end
 
        if tip_ts >= (scan_ts+1)
            % Stop the AFM tip once the scanning duration reached
@@ -368,11 +376,37 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                 eta_adj = 0.0;
                 %=====================================================================
                 eta = eta_base + eta_adj;
-                [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t);
-                temp_mono_current = monolayer_model(delta_t,i0_monolayer);
-                temp_passs_current = passive_model(delta_t, i0_growth, i0_passive_base);
-
-                oxide(j).damage_current = temp__interface_current + temp_mono_current + temp_passs_current; 
+                %=====================================================================
+                % Check to see if the simulation time for the node is still
+                % within the node's rebuilding the oxide window.  If it is,
+                % keep going.  If it is now, transition to the passive
+                % background current for the node
+                %=====================================================================                
+                if delta_t <= cutoff
+                    [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t);
+                    temp_mono_current = monolayer_model(delta_t,i0_monolayer);                            
+                    temp_pass_current = 0.0;
+                else
+                    [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t); 
+                    if oxide(j).cutoff_state < 0.5
+                        oxide(j).cutoff_state = 1;
+                        oxide(j).cutoff_current = temp__interface_current;
+                        oxide(j).cutoff_time = sim_time(idx_time,1);                        
+                    end
+                    temp_mono_current = 0.0;                    
+                    i_pass_t = passive_model(delta_t, i0_growth, i0_passive_base);
+                    if temp__interface_current >= i_pass_t
+                        delta_ct = sim_time(idx_time,1) - oxide(j).cutoff_time;
+                        b = 0.5;
+                        temp_pass_current = (oxide(j).cutoff_current - i_pass_t) * exp(-delta_ct/b) + i_pass_t;
+                        temp__interface_current = 0.0;
+                    else
+                        temp_pass_current = i_pass_t;
+                        temp__interface_current = 0.0;
+                    end
+                end
+                %=====================================================================
+                oxide(j).damage_current = temp__interface_current + temp_mono_current + temp_pass_current; 
                 oxide(j).i0_growth = i0_growth;
                 oxide(j).alpha_node = alpha;
                 oxide(j).num = num;
@@ -408,13 +442,41 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                     %=====================================================================
                     % $g^{+} = \alpha^{+}zF/RT$
                     %=====================================================================                    
-                    g_plus = (alpha * z * Faraday_Constant)/ (R * T);                   
-                    [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t);
-                    temp_mono_current = monolayer_model(delta_t,i0_monolayer);
-                    temp_passs_current = passive_model(delta_t, i0_growth, i0_passive_base);
+                    g_plus = (alpha * z * Faraday_Constant)/ (R * T); 
+                    
+                    %=====================================================================
+                    % Check to see if the simulation time for the node is still
+                    % within the node's rebuilding the oxide window.  If it is,
+                    % keep going.  If it is now, transition to the passive
+                    % background current for the node
+                    %=====================================================================                
+                    if delta_t <= cutoff
+                        [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t);
+                        temp_mono_current = monolayer_model(delta_t,i0_monolayer);                            
+                        temp_pass_current = 0.0;
+                    else
+                        [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t); 
+                        if oxide(j).cutoff_state < 0.5
+                            oxide(j).cutoff_state = 1;
+                            oxide(j).cutoff_current = temp__interface_current;
+                            oxide(j).cutoff_time = sim_time(idx_time,1);                        
+                        end
+                        temp_mono_current = 0.0;                    
+                        i_pass_t = passive_model(delta_t, i0_growth, i0_passive_base);
+                        if temp__interface_current >= i_pass_t
+                            delta_ct = sim_time(idx_time,1) - oxide(j).cutoff_time;
+                            b = 0.5;
+                            temp_pass_current = (oxide(j).cutoff_current - i_pass_t) * exp(-delta_ct/b) + i_pass_t;
+                            temp__interface_current = 0.0;
+                        else
+                            temp_pass_current = i_pass_t;
+                            temp__interface_current = 0.0;
+                        end
+                    end
+                    %=====================================================================
 
                     % Sum the current from all contributions
-                    oxide(j).damage_current = temp__interface_current + temp_mono_current + temp_passs_current; 
+                    oxide(j).damage_current = temp__interface_current + temp_mono_current + temp_pass_current; 
                     oxide(j).i0_growth = i0_growth;
                     oxide(j).alpha_node = alpha;
                     oxide(j).num = num;

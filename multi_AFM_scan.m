@@ -47,14 +47,11 @@ function multi_AFM_scan
     clc;
     clear all;
     
-    % Start check for wall-clock time
-    tic
-    
     %=====================================================================
     % Order of scans: $\sigma_{max}$ = 5.8, 8.6, 10.3, 11.25, 12.59 GPa    
     %=====================================================================
-    total_exp_time = [86.0, 160.0, 160.0, 170.0, 185.0]; %s
-    time_scanning =  [61.0, 110.0, 132.0, 142.0, 157.0]; %s
+    total_exp_time = [86.0, 170.0, 180.0, 190.0, 210.0]; %s
+    time_scanning =  [61.0, 129.0, 139.0, 146.0, 160.0]; %s
     relaxation_time = total_exp_time - time_scanning;
     %=====================================================================
     %=====================================================================
@@ -130,25 +127,28 @@ function multi_AFM_scan
 %     alpha0 = [0.32, 0.385, 0.40, 0.42, 0.421];
 %     alpha0 = [0.32, 0.40, 0.49, 0.49, 0.51];
 %     alpha0 = [0.32, 0.37, 0.38, 0.392755, 0.405165];
-    alpha0 = mdl_a_plus(L_base); 
+    alpha0 = [0.32, 0.32, 0.33, 0.392755, 0.405165];
+%     alpha0 = mdl_a_plus(L_base); 
     %=====================================================================
     % $i_{0,monolayer}$ - represents the current due to the formation of 
     % initial monolayer of oxide
     %=====================================================================
-    i0_monolayer = [1.0, 1.0, 1.0, 1.0, 1.0] .*1.0e-3; %A/cm2
+    i0_monolayer = [1.0, 1.0, 1.0, 1.0, 1.0] .*1.0e-4; %A/cm2
 %     i0_growth_base = [12.0, 2.0, 0.07, 0.06, 0.03] .* 1.0e-10; %A/cm2
 %     i0_growth_base = [14.0, 3.0, 0.4, 14.0, 14.0] .* 1.0e-10; %A/cm2
     %=====================================================================
     % $i_{growth}$ - represents the current from the high-field film growth
     %=====================================================================
 %     i0_growth_base = [10, 1.28, 0.5, 0.3, 0.2] .* node_area_cm2; %A/cm2
-    i0_growth_base = mdl_ig(L_base).* node_area_cm2; %A/cm2
+    i0_growth_base = [10, 1.5, 1.3, 0.3, 0.2] .* node_area_cm2; %A/cm2
+%     i0_growth_base = mdl_ig(L_base).* node_area_cm2; %A/cm2
     %=====================================================================
     % $i_{passive} - represents the current from the passivated surface at
     % long times
     %=====================================================================    
-%     i0_pass = [1.0, 0.1, 0.01, 0.001976, 0.000103].*1.0e-2;%A/cm2
-    i0_pass = mdl_ip(L_base); %A/cm2
+%     i0_pass = [3.0, 0.5, 0.01, 0.001976, 0.000103].*1.0e-2;%A/cm2
+    i0_pass = [1.0, 1.0, 1.0, 1.0, 1.0].*1.0e-6;%A/cm2
+%     i0_pass = mdl_ip(L_base); %A/cm2
     %=====================================================================
     % $E_{film}$ - represents the electric field that is set up across the
     % oxide layer between the metal surface and the electrolyte due to
@@ -157,6 +157,9 @@ function multi_AFM_scan
 %     E_film = [0.38, 0.6, 0.76, 0.80, 0.90];
 %     E_film = [0.5, 0.8, 0.9, 0.93, 0.935]; % V/nm
     E_film = mdl_ef(L_base); % V/nm
+    %=====================================================================
+    %=====================================================================
+    cutoff_values = [10, 10, 10, 10, 10].*(nodes(1)*(length_multiplier * dt));
     %=====================================================================
     %=====================================================================
     % Create a simulation parameter structure to assist with passing the
@@ -182,14 +185,20 @@ function multi_AFM_scan
         sim(i).comp_nodes = nodes;
         sim(i).v_tip = v_tip;
         sim(i).N_asp = N_asperities;
+        sim(i).cutoff_time = cutoff_values(i);
         sim(i).figure_number = i;
     end
     
-    
+    %=====================================================================
     for idx_iteration = 1:number_of_scans
+        % Start check for wall-clock time
+        tic        
+        % Call the simulation/plotting routine for each set of simulation
+        % parameters
         tribo_analysis_roughness_3(sim(idx_iteration));
+        % Finish check for wall-clock time
+        toc        
     end
     %=====================================================================
-    % Finish check for wall-clock time
-    toc
+
 end

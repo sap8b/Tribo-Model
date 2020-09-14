@@ -56,7 +56,7 @@ function tribo_analysis_roughness_3(zsim)
         AFM_scan_3(x_pos, y_pos, initial_surface_roughness, zsim.comp_nodes, ...
         number_of_intervals, relaxation_time_intervals, number_of_time_steps, actual_dt, ...
         'Diamond', 'Cr2O3', zsim.load, zsim.v_tip, zsim.eta, zsim.alpha, ...
-        zsim.i0_field, zsim.Ef, zsim.i0_mono, i0p2);
+        zsim.i0_field, zsim.Ef, zsim.i0_mono, i0p2, zsim.cutoff_time);
     %=====================================================================
     
     %=====================================================================
@@ -122,9 +122,9 @@ function tribo_analysis_roughness_3(zsim)
     data_current = data(:,2);
     
     if zsim.figure_number == 2
-        t = t + 10.0;
+        t = t + 5.0;
     elseif zsim.figure_number == 3
-        t = t + 8.5;
+        t = t + 5.0;
     end
     
     figure(zsim.figure_number)
@@ -136,7 +136,10 @@ function tribo_analysis_roughness_3(zsim)
     plot(t, i_tot.*(modifier_area*modifier_A_to_fA), strcat(color_vals,mv), 'MarkerSize',marker_size,'LineWidth',plot_line_width) %,mv '-', .*modifier_area .*modifier_nodes 
     
     color_vals2 = color_range(zsim.figure_number+9);
-    plot(data_time, data_current, '-r') %, strcat('-',color_vals2), 'MarkerSize',marker_size,'LineWidth',plot_line_width-1
+    dplot = 1;
+    if dplot == 1
+        plot(data_time, data_current, '-r') %, strcat('-',color_vals2), 'MarkerSize',marker_size,'LineWidth',plot_line_width-1
+    end
     
     xlabel('t (s)', 'FontSize', axis_label_size,'FontWeight',font_weight)
     ylabel('i (fA)', 'FontSize', axis_label_size,'FontWeight',font_weight) 
