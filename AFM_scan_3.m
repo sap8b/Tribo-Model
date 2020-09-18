@@ -40,8 +40,8 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
             nu_substrate = 0.25; %Cr2O3 
             E_substrate = 125e9; %Pa Cr2O3 
 %             H_substrate = (0.009807 * 8.25) * 1.0e9; %Pa - HV from Wikipedia for C2O3 and formula from gordonengland.co.uk
-            H_substrate = (0.009807 * 50) * 1.0e9; %Pa - HV from Wikipedia for Cr2O3 and formula from gordonengland.co.uk            
-            K_archard = 1.0e-6; %1.7e-5; %1.7e-5; % For a ferritic stainless steel in Wikipedia  
+            H_substrate = (0.009807 * 8.25) * 1.0e9; %Pa - HV from Wikipedia for Cr2O3 and formula from gordonengland.co.uk            
+            K_archard = 5.72e-5; %1.7e-5; %1.7e-5; % For a ferritic stainless steel in Wikipedia  
             k_film = 504; %nm.cm2/A.s 
             z = 1;
             alpha_stress_modifier = 1;  
@@ -252,8 +252,10 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         p_node = p_max * sqrt(1 - (ar_ratio));
                         delta_h_m = (K_archard/H_substrate)*p_node*dt*(velocity_tip*1.0e-9); %m
                         delta_h_nm = delta_h_m * 1.0e9; %nm
+                        
                         oxide(j).height = check_node_height - delta_h_nm;                
                         node_height_nm = oxide(j).height; % nm                        
+                        E0f = 1.225/node_height_nm;
                         
                         height_ratio = node_height_nm/node_base_height;
                         eta_adj = (p_node/E_substrate)*(2*p_node*Vm)/(3*3*Faraday_Constant);
@@ -282,7 +284,8 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         delta_h_m = (K_archard/H_substrate)*p_node*dt*(velocity_tip*1.0e-9); %m
                         delta_h_nm = delta_h_m * 1.0e9; %nm
                         oxide(j).height = check_node_height - delta_h_nm;                
-                        node_height_nm = oxide(j).height; % nm                        
+                        node_height_nm = oxide(j).height; % nm      
+                        E0f = 1.225/node_height_nm;
 
                         height_ratio = node_height_nm/node_base_height;
                         eta_adj = (p_node/E_substrate)*(2*p_node*Vm)/(3*3*Faraday_Constant);
@@ -323,6 +326,8 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
 
                         height_ratio = node_height_nm/node_base_height;
                         eta_adj = (p_node/E_substrate)*(2*p_node*Vm)/(3*3*Faraday_Constant);
+                        E0f = 1.225/node_height_nm;
+                        
                         if height_ratio < 1.0                           
                             alpha = alpha0;
                             i0_growth = i0_model; 
@@ -347,6 +352,8 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         
                         node_height_nm = oxide(j).height;
                         height_ratio = node_height_nm/node_base_height;
+                        E0f = 1.225/node_height_nm;
+                        
 %                         delta_h_nm = oxide(j).base_height - node_height_nm;                        
                         if height_ratio < 1.0
                             eta_adj = 0.0;                            
@@ -365,6 +372,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         i0_growth = 0.0;
                         alpha = alpha0;
                         i0_monolayer = 0.0;
+                        E0f = 0.0;
                     end
                     
                 end                 
@@ -383,11 +391,11 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                 % background current for the node
                 %=====================================================================                
                 if delta_t <= cutoff
-                    [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t);
+                    [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, eta, delta_t);
                     temp_mono_current = monolayer_model(delta_t,i0_monolayer);                            
                     temp_pass_current = 0.0;
                 else
-                    [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t); 
+                    [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, eta, delta_t); 
                     if oxide(j).cutoff_state < 0.5
                         oxide(j).cutoff_state = 1;
                         oxide(j).cutoff_current = temp__interface_current;
@@ -427,6 +435,8 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                     
                     node_height_nm = oxide(j).height;% * 1.0e-3; nm                    
                     height_ratio = node_height_nm/oxide(j).base_height;
+                    E0f = 1.225/node_height_nm;
+                    
 %                     delta_h_nm = oxide(j).base_height - node_height_nm; 
                     if height_ratio < 1.0
                         eta_adj = 0.0;
@@ -451,11 +461,11 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                     % background current for the node
                     %=====================================================================                
                     if delta_t <= cutoff
-                        [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t);
+                        [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, eta, delta_t);
                         temp_mono_current = monolayer_model(delta_t,i0_monolayer);                            
                         temp_pass_current = 0.0;
                     else
-                        [temp__interface_current,num,denom] = i_growth(k_film, E_film, i0_growth, g_plus, eta, delta_t); 
+                        [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, eta, delta_t); 
                         if oxide(j).cutoff_state < 0.5
                             oxide(j).cutoff_state = 1;
                             oxide(j).cutoff_current = temp__interface_current;

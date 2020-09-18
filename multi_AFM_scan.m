@@ -127,7 +127,7 @@ function multi_AFM_scan
 %     alpha0 = [0.32, 0.385, 0.40, 0.42, 0.421];
 %     alpha0 = [0.32, 0.40, 0.49, 0.49, 0.51];
 %     alpha0 = [0.32, 0.37, 0.38, 0.392755, 0.405165];
-    alpha0 = [0.32, 0.32, 0.33, 0.392755, 0.397];
+    alpha0 = [0.32, 0.321, 0.33, 0.392755, 0.397];
 %     alpha0 = mdl_a_plus(L_base); 
     %=====================================================================
     % $i_{0,monolayer}$ - represents the current due to the formation of 
@@ -140,7 +140,7 @@ function multi_AFM_scan
     % $i_{growth}$ - represents the current from the high-field film growth
     %=====================================================================
 %     i0_growth_base = [10, 1.28, 0.5, 0.3, 0.2] .* node_area_cm2; %A/cm2
-    i0_growth_base = [10, 1.5, 1.3, 0.3, 0.25] .* node_area_cm2; %A/cm2
+    i0_growth_base = [18, 1.5, 1.3, 0.7, 0.6] .* node_area_cm2; %A/cm2
 %     i0_growth_base = mdl_ig(L_base).* node_area_cm2; %A/cm2
     %=====================================================================
     % $i_{passive} - represents the current from the passivated surface at
