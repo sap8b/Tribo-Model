@@ -1,7 +1,7 @@
 function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
     AFM_scan_3(x_pos, y_pos, z_pos, N_nodes, scan_ts, relax_time_ts, actual_ts, ...
     dt, tip, sub, L, v_tip, eta_base, alpha0, i0_growth_base, E_film, ...
-    i0_monolayer_base, i0_passive_base, cutoff)
+    i0_monolayer_base, i0_passive_base, cutoff, v_act)
     %=====================================================================
     % This function models a simple AFM tip scan
     %=====================================================================
@@ -10,6 +10,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
     Faraday_Constant = 96485; %coul/mol
     R = 8.314; %J/mol K
     T = 298; %K    
+    kb = 1.38e-23;
     %=====================================================================
     % Define some new variables from the parameters passed to the function
     %=====================================================================
@@ -234,6 +235,11 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                 node_base_height = oxide(j).base_height;
                 
                 if (testr < r_damage_nm) 
+                    ar_ratio = (testr^2)/(r_damage_nm^2);
+                    p_node = p_max * sqrt(1 - (ar_ratio));
+                    if abs(imag(p_node)) > 0.0
+                        disp(num)
+                    end                        
                     %======================================================
                     % Checks to see if the test node is inside the damage
                     % area
@@ -247,9 +253,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         oxide(j).rebuild_time = init_time; % + dt
 
                         delta_t = sim_time(idx_time,1) - oxide(j).initiation_time;
-                        
-                        ar_ratio = (testr^2)/(r_damage_nm^2);
-                        p_node = p_max * sqrt(1 - (ar_ratio));
+
                         delta_h_m = (K_archard/H_substrate)*p_node*dt*(velocity_tip*1.0e-9); %m
                         delta_h_nm = delta_h_m * 1.0e9; %nm
                         
@@ -279,8 +283,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         init_time = oxide(j).initiation_time;
                         delta_t = sim_time(idx_time,1) - init_time;
                         
-                        ar_ratio = (testr^2)/(r_damage_nm^2);
-                        p_node = p_max * sqrt(1 - (ar_ratio));
+
                         delta_h_m = (K_archard/H_substrate)*p_node*dt*(velocity_tip*1.0e-9); %m
                         delta_h_nm = delta_h_m * 1.0e9; %nm
                         oxide(j).height = check_node_height - delta_h_nm;                
@@ -380,6 +383,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                 % $g^{+} = \alpha^{+}zF/RT$
                 %=====================================================================
                 g_plus = (alpha * z * Faraday_Constant)/ (R * T); 
+                stress_effect = (p_node * v_act)/(kb*T);
                 %=====================================================================
                 eta_adj = 0.0;
                 %=====================================================================
@@ -391,11 +395,11 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                 % background current for the node
                 %=====================================================================                
                 if delta_t <= cutoff
-                    [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, eta, delta_t);
+                    [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, stress_effect, eta, delta_t);
                     temp_mono_current = monolayer_model(delta_t,i0_monolayer);                            
                     temp_pass_current = 0.0;
                 else
-                    [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, eta, delta_t); 
+                    [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, stress_effect, eta, delta_t); 
                     if oxide(j).cutoff_state < 0.5
                         oxide(j).cutoff_state = 1;
                         oxide(j).cutoff_current = temp__interface_current;
@@ -453,7 +457,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                     % $g^{+} = \alpha^{+}zF/RT$
                     %=====================================================================                    
                     g_plus = (alpha * z * Faraday_Constant)/ (R * T); 
-                    
+                    stress_effect = 0.0;
                     %=====================================================================
                     % Check to see if the simulation time for the node is still
                     % within the node's rebuilding the oxide window.  If it is,
@@ -461,11 +465,11 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                     % background current for the node
                     %=====================================================================                
                     if delta_t <= cutoff
-                        [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, eta, delta_t);
+                        [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, stress_effect, eta, delta_t);
                         temp_mono_current = monolayer_model(delta_t,i0_monolayer);                            
                         temp_pass_current = 0.0;
                     else
-                        [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, eta, delta_t); 
+                        [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, stress_effect, eta, delta_t); 
                         if oxide(j).cutoff_state < 0.5
                             oxide(j).cutoff_state = 1;
                             oxide(j).cutoff_current = temp__interface_current;

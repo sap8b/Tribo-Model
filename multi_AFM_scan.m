@@ -51,7 +51,7 @@ function multi_AFM_scan
     % Order of scans: $\sigma_{max}$ = 5.8, 8.6, 10.3, 11.25, 12.59 GPa    
     %=====================================================================
     total_exp_time = [86.0, 170.0, 180.0, 190.0, 210.0]; %s
-    time_scanning =  [61.0, 129.0, 139.0, 146.0, 160.0]; %s
+    time_scanning =  [61.0, 112.0, 135.0, 143.0, 160.0]; %s
     relaxation_time = total_exp_time - time_scanning;
     %=====================================================================
     %=====================================================================
@@ -65,7 +65,7 @@ function multi_AFM_scan
     % the execution code
     %=====================================================================
     output_files = {'Model58GPa.csv', 'Model86GPa.csv', ...
-        'Model103GPa.csv', 'Model1125GPa.csv', 'Model1259.csv'};
+        'Model103GPa.csv', 'Model1125GPa.csv', 'Model1259GPa.csv'};
     %=====================================================================
     %=====================================================================
     % Initialize variables
@@ -127,8 +127,14 @@ function multi_AFM_scan
 %     alpha0 = [0.32, 0.385, 0.40, 0.42, 0.421];
 %     alpha0 = [0.32, 0.40, 0.49, 0.49, 0.51];
 %     alpha0 = [0.32, 0.37, 0.38, 0.392755, 0.405165];
-    alpha0 = [0.32, 0.321, 0.33, 0.392755, 0.397];
+    alpha0 = [0.31, 0.31, 0.31, 0.31, 0.31];    
 %     alpha0 = mdl_a_plus(L_base); 
+
+    %=====================================================================
+    %=====================================================================
+    % Reaction activation volume
+%     v_act = [0.49, 0.28, 0.20, 0.16, 0.15].*1.0e-30;
+    v_act = [0.10, 0.12, 0.13, 0.14, 0.16].*1.0e-30;    
     %=====================================================================
     % $i_{0,monolayer}$ - represents the current due to the formation of 
     % initial monolayer of oxide
@@ -140,7 +146,9 @@ function multi_AFM_scan
     % $i_{growth}$ - represents the current from the high-field film growth
     %=====================================================================
 %     i0_growth_base = [10, 1.28, 0.5, 0.3, 0.2] .* node_area_cm2; %A/cm2
-    i0_growth_base = [18, 1.5, 1.3, 0.7, 0.6] .* node_area_cm2; %A/cm2
+%     i0_growth_base = [18, 1.5, 1.3, 0.7, 0.6] .* node_area_cm2; %A/cm2
+%     i0_growth_base = [24, 3, 3.5, 6, 9] .* node_area_cm2; %A/cm2
+    i0_growth_base = [11.0, 11.0, 11.0, 11.0, 11.0] .* node_area_cm2; %A/cm2
 %     i0_growth_base = mdl_ig(L_base).* node_area_cm2; %A/cm2
     %=====================================================================
     % $i_{passive} - represents the current from the passivated surface at
@@ -159,7 +167,7 @@ function multi_AFM_scan
     E_film = mdl_ef(L_base); % V/nm
     %=====================================================================
     %=====================================================================
-    cutoff_values = [10, 10, 10, 10, 10].*(nodes(1)*(length_multiplier * dt));
+    cutoff_values = [15, 15, 15, 15, 15].*(nodes(1)*(length_multiplier * dt));
     %=====================================================================
     %=====================================================================
     % Create a simulation parameter structure to assist with passing the
@@ -176,6 +184,7 @@ function multi_AFM_scan
         sim(i).eta = eta(2);
         sim(i).morphology = surface_morphology;
         sim(i).alpha = alpha0(i);
+        sim(i).vact = v_act(i);
         sim(i).i0_field = i0_growth_base(i);
         sim(i).i0_mono = i0_monolayer(i);
         sim(i).i0_pass = i0_pass(i);
@@ -190,7 +199,7 @@ function multi_AFM_scan
     end
     
     %=====================================================================
-    for idx_iteration = 1:number_of_scans
+    for idx_iteration = 1:1 %1:number_of_scans
         % Start check for wall-clock time
         tic        
         % Call the simulation/plotting routine for each set of simulation

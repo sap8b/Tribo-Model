@@ -12,7 +12,7 @@ function test_stress_activation
     % the execution code
     %=====================================================================
     output_files = {'Model58GPa.csv', 'Model86GPa.csv', ...
-        'Model103GPa.csv', 'Model1125GPa.csv', 'Model1259.csv'};
+        'Model103GPa.csv', 'Model1125GPa.csv', 'Model1259GPa.csv'};
     %=====================================================================
     nfiles = length(exp_files);
     I_avg = zeros(1,nfiles);
@@ -55,28 +55,36 @@ function test_stress_activation
     x1 = 5.0:0.1:13.0;
     x = x1.*1.0e9;    
     
+    %=====================================================================
     % Fit the exp data
-    b0 = [14.0e-15, 1.0e-10 -0.1];    
-    sp = [stress(3), stress(4), stress(5)];
-    ip = [I_avg(3),I_avg(4), I_avg(5)];    
+    %=====================================================================
+    b0 = [13.6e-15, 1.632e-10 -0.1];    
+    sp = [stress(1), stress(2), stress(3), stress(4)];
+    ip = [I_avg(1),I_avg(2), I_avg(3), I_avg(4)];    
     mdl_tbc_600_data = fitnlm(sp,ip,fn,b0);
     
     disp(mdl_tbc_600_data)
     y = feval(mdl_tbc_600_data,x);
-    
-    b1 = [13.0e-15 1.0e-10 -0.1];
+    %=====================================================================
+    %=====================================================================
+    % Fit the no cutoff model
+    b1 = [13.6e-15 1.632e-10 -0.1];
     mdl_tbc_600_no_cutoff = fitnlm(stress_no86,I_avg_model_nocutoff,fn,b1);
     
     disp(mdl_tbc_600_no_cutoff)    
     y2 = feval(mdl_tbc_600_no_cutoff,x);
-    
-    b2 = [15.0e-15 1.0e-10 -0.1];
+    %=====================================================================
+    %=====================================================================
+    % Fit the cutoff model    
+    %=====================================================================
+    b2 = [13.6e-15 1.632e-10 -0.14];
     sp = [ stress(2), stress(3), stress(4), stress(5)];
     ip = [I_avg_with_cutoff(2), I_avg_with_cutoff(3), I_avg_with_cutoff(4), I_avg_with_cutoff(5)];
     mdl_tbc_600_cutoff32 = fitnlm(sp,ip,fn,b2);
     
     disp(mdl_tbc_600_cutoff32)    
     y3 = feval(mdl_tbc_600_cutoff32,x);  
+    %=====================================================================
     
     kb = 1.38e-23; %
     T = 298;
@@ -97,22 +105,25 @@ function test_stress_activation
     mdl_cutoff_fits = [(-mdl_cutoff_fit_Ea_coeff*Na)/1000, mdl_cutoff_fit_Va_coeff/conv_m3_A3].*(kb*T); %kJ/mol  A3
     
     i_exp_str = strcat('i_{fit, Exp}, E_{a} = ', num2str(exp_fits(1)), ' kJ/mol; V_{a} = ', num2str(exp_fits(2)), 'A^{3}');
-    i_mdl1_str = strcat('i_{fit, Model 1}, E_{a} = ', num2str(mdl_nocutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_nocutoff_fits(2)), 'A^{3}');
+%     i_mdl1_str = strcat('i_{fit, Model 1}, E_{a} = ', num2str(mdl_nocutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_nocutoff_fits(2)), 'A^{3}');
     i_mdl2_str = strcat('i_{fit, Model 2}, E_{a} = ', num2str(mdl_cutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_cutoff_fits(2)), 'A^{3}');    
     
     figure(1)
     hold on
     plot(stress,I_avg,'k+', 'MarkerSize',marker_size+2,'LineWidth',plot_line_width)
-    plot(stress_no86,I_avg_model_nocutoff,'r^', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+%     plot(stress_no86,I_avg_model_nocutoff,'r^', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
     plot(stress,I_avg_with_cutoff,'bo', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
     
     plot(x,y,'-k', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
-    plot(x,y2,'-r', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+%     plot(x,y2,'-r', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
     plot(x,y3,'-b', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
     
     axis square
-    legend('i_{avg}, Measured','i_{avg}, Model 1 - no cutoff', 'i_{avg}, Model 2 - \tau_{cutoff} = 32 s', ...
-        i_exp_str,i_mdl1_str,i_mdl2_str,'Location','northwest')
+%     legend('i_{avg}, Measured','i_{avg}, Model 1 - no cutoff', 'i_{avg}, Model 2 - \tau_{cutoff} = 48 s', ...
+%         i_exp_str,i_mdl1_str,i_mdl2_str,'Location','northwest')
+    
+    legend('i_{avg}, Measured','i_{avg}, Model 2 - \tau_{cutoff} = 48 s', ...
+        i_exp_str,i_mdl2_str,'Location','northwest')
     
     xlabel('Stress (Pa)', 'FontSize', axis_label_size,'FontWeight',font_weight)
     ylabel('I (A)', 'FontSize', axis_label_size,'FontWeight',font_weight)
@@ -145,7 +156,8 @@ function y = exptest(b,x)
 end
 
 function y = exptest2(b,x)
-    b(1) = 13.2e-15; %A
+%     b(1) = 13.6e-15; %A
+%     b(2) = 1.632e-10;
 %     b(3) = -0.14886; %-2.0196595; %-0.242;
     y = b(1).*exp((b(2).*x) + b(3));
 end

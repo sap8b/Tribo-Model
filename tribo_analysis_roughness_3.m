@@ -56,7 +56,8 @@ function tribo_analysis_roughness_3(zsim)
         AFM_scan_3(x_pos, y_pos, initial_surface_roughness, zsim.comp_nodes, ...
         number_of_intervals, relaxation_time_intervals, number_of_time_steps, actual_dt, ...
         'Diamond', 'Cr2O3', zsim.load, zsim.v_tip, zsim.eta, zsim.alpha, ...
-        zsim.i0_field, zsim.Ef, zsim.i0_mono, i0p2, zsim.cutoff_time);
+        zsim.i0_field, zsim.Ef, zsim.i0_mono, i0p2, zsim.cutoff_time, ...
+        zsim.vact);
     %=====================================================================
     
     %=====================================================================
@@ -122,7 +123,7 @@ function tribo_analysis_roughness_3(zsim)
     data_current = data(:,2);
     
     if zsim.figure_number == 2
-        t = t + 5.0;
+        t = t + 10.0;
     elseif zsim.figure_number == 3
         t = t + 5.0;
     end
