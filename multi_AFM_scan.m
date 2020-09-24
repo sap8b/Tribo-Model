@@ -134,7 +134,7 @@ function multi_AFM_scan
     %=====================================================================
     % Reaction activation volume
 %     v_act = [0.49, 0.28, 0.20, 0.16, 0.15].*1.0e-30;
-    v_act = [0.10, 0.12, 0.13, 0.14, 0.16].*1.0e-30;    
+    v_act = [0.10, 0.10, 0.10, 0.10, 0.10].*1.0e-30;    
     %=====================================================================
     % $i_{0,monolayer}$ - represents the current due to the formation of 
     % initial monolayer of oxide
@@ -199,7 +199,7 @@ function multi_AFM_scan
     end
     
     %=====================================================================
-    for idx_iteration = 1:1 %1:number_of_scans
+    for idx_iteration = 1:number_of_scans
         % Start check for wall-clock time
         tic        
         % Call the simulation/plotting routine for each set of simulation
