@@ -55,9 +55,9 @@ function test_stress_activation
     
     I_avg_model_nocutoff = [32.4623,  64.77407, 73.97724, 94.48909].*1.0e-15; %A Tribo Model - no cutoff
     
-%     I_avg_with_cutoff = [29.86840232,  37.21755627, 47.79358577, 60.87252707, 71.82683551].*1.0e-15; %A Tribo Model - t_cutoff = 32s
-%     I_avg_with_cutoff = I_avg_with_cutoff.*1.0e-15; %A Tribo Model - t_cutoff = 32s
-    I_avg_with_cutoff = [33.82, 100.71, 115.37, 125.19, 140.78].*1.0e-15; %A Tribo Model - t_cutoff = 48s
+    I_avg_with_cutoff_top = [29.86840232,  100.2, 114.8, 124.5, 139.9].*1.0e-15; %A Tribo Model - t_cutoff = 32s
+    I_avg_with_cutoff = I_avg_with_cutoff.*1.0e-15; %A Tribo Model - t_cutoff = 32s
+%     I_avg_with_cutoff = [33.82, 100.71, 115.37, 125.19, 140.78].*1.0e-15; %A Tribo Model - t_cutoff = 48s
         
     fn = @exptest2;
     x1 = 5.0:0.1:13.0;
@@ -75,17 +75,19 @@ function test_stress_activation
     y = feval(mdl_tbc_600_data,x);
     %=====================================================================
     %=====================================================================
-    % Fit the no cutoff model
-    b1 = [14.485e-15 v_act_test(2) -0.1];
-    mdl_tbc_600_no_cutoff = fitnlm(stress_no86,I_avg_model_nocutoff,fn,b1);
+    % Fit the cutoff top model
+    b1 = [1.0e-14 9.0e-31 ((0.01/Na)*1000)/(kb*T)]; %[14.485e-15 v_act_test(2) -0.1];
+    sp = [stress(2), stress(3), stress(4), stress(5)]; %
+    ip = [I_avg_with_cutoff_top(2), I_avg_with_cutoff_top(3), I_avg_with_cutoff_top(4), I_avg_with_cutoff_top(5)]; %    
+    mdl_tbc_600_cutoff_top = fitnlm(sp,ip,fn,b1);
     
-    disp(mdl_tbc_600_no_cutoff)    
-    y2 = feval(mdl_tbc_600_no_cutoff,x);
+    disp(mdl_tbc_600_cutoff_top)    
+    y2 = feval(mdl_tbc_600_cutoff_top,x);
     %=====================================================================
     %=====================================================================
     % Fit the cutoff model    
     %=====================================================================
-    b2 = [10.0e-15 v_act_test(3) 0.3];
+    b2 = [1.0e-14 9.0e-31 ((0.01/Na)*1000)/(kb*T)];
     sp = [ stress(2), stress(3), stress(4), stress(5)]; %
     ip = [I_avg_with_cutoff(2), I_avg_with_cutoff(3), I_avg_with_cutoff(4), I_avg_with_cutoff(5)]; %
     mdl_tbc_600_cutoff32 = fitnlm(sp,ip,fn,b2);
@@ -93,12 +95,17 @@ function test_stress_activation
     disp(mdl_tbc_600_cutoff32)    
     y3 = feval(mdl_tbc_600_cutoff32,x);  
     %=====================================================================
+    %=====================================================================
+    % Linear fit
+    p = polyfit(sp,ip,1);
+    y4 = polyval(p,x);
+    %=====================================================================
         
     exp_fit_Ea_coeff = mdl_tbc_600_data.Coefficients.Estimate(3);
     exp_fit_Va_coeff = mdl_tbc_600_data.Coefficients.Estimate(2);
     
-    mdl_nocutoff_fit_Ea_coeff = mdl_tbc_600_no_cutoff.Coefficients.Estimate(3);
-    mdl_nocutoff_fit_Va_coeff = mdl_tbc_600_no_cutoff.Coefficients.Estimate(2);
+    mdl_nocutoff_fit_Ea_coeff = mdl_tbc_600_cutoff_top.Coefficients.Estimate(3);
+    mdl_nocutoff_fit_Va_coeff = mdl_tbc_600_cutoff_top.Coefficients.Estimate(2);
     
     mdl_cutoff_fit_Ea_coeff = mdl_tbc_600_cutoff32.Coefficients.Estimate(3);
     mdl_cutoff_fit_Va_coeff = mdl_tbc_600_cutoff32.Coefficients.Estimate(2);
@@ -124,18 +131,20 @@ function test_stress_activation
     writematrix(MatrixOutput1,'BestFitExpMdl.csv','Delimiter','comma')     
     
     i_exp_str = strcat('i_{fit, Exp}, E_{a} = ', num2str(exp_fits(1)), ' kJ/mol; V_{a} = ', num2str(exp_fits(2)), 'A^{3}');
-%     i_mdl1_str = strcat('i_{fit, Model 1}, E_{a} = ', num2str(mdl_nocutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_nocutoff_fits(2)), 'A^{3}');
-    i_mdl2_str = strcat('i_{fit, Model 2}, E_{a} = ', num2str(mdl_cutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_cutoff_fits(2)), 'A^{3}', 'i_{guess}');    
+    i_mdl1_str = strcat('i_{fit, Model 1}, E_{a} = ', num2str(mdl_nocutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_nocutoff_fits(2)), 'A^{3}');
+    i_mdl2_str = strcat('i_{fit, Model 2}, E_{a} = ', num2str(mdl_cutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_cutoff_fits(2)), 'A^{3}');    
     
     figure(1)
     hold on
     plot(stress,I_avg,'k+', 'MarkerSize',marker_size+2,'LineWidth',plot_line_width)
 %     plot(stress_no86,I_avg_model_nocutoff,'r^', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
     plot(stress,I_avg_with_cutoff,'bo', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+%     plot(stress,I_avg_with_cutoff_top,'g^','MarkerSize',marker_size,'LineWidth',plot_line_width)
     
-    plot(x,y,':k', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
-%     plot(x,y2,'-r', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
-    plot(x,y3,':b', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+%     plot(x,y,':k', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+%     plot(x,y2,'-g', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+%     plot(x,y3,':b', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+%     plot(x,y4,'-.b','MarkerSize',marker_size,'LineWidth',plot_line_width)
     
     plot(x,i_mdl_guess,'-r', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
     axis square
@@ -143,7 +152,7 @@ function test_stress_activation
 %         i_exp_str,i_mdl1_str,i_mdl2_str,'Location','northwest')
     
     legend('i_{avg}, Measured','i_{avg}, Model 2 - \tau_{cutoff} = 48 s', ...
-        i_exp_str,i_mdl2_str,'Location','northwest')
+        i_exp_str,i_mdl2_str, 'i_{linear}','i_{guess}','Location','northwest')
     
     xlabel('Stress (Pa)', 'FontSize', axis_label_size,'FontWeight',font_weight)
     ylabel('I (A)', 'FontSize', axis_label_size,'FontWeight',font_weight)
@@ -157,7 +166,6 @@ function test_stress_activation
     ax.LineWidth = axis_line_width;
     ax.XMinorTick = 'on';  
     legend boxoff
-    hold off    
     
     hold off
     
@@ -189,3 +197,5 @@ function y = exptest2(b,x)
 
     y = i0.*exp(stress_effect + E_act);
 end
+
+

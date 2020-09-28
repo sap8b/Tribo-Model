@@ -1,6 +1,6 @@
 function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
     AFM_scan_3(x_pos, y_pos, z_pos, N_nodes, scan_ts, relax_time_ts, actual_ts, ...
-    dt, tip, sub, L, v_tip, eta_base, alpha0, i0_growth_base, E_film, ...
+    dt, tip, sub, L, v_tip, eapp_base, ecorr_base, alpha0, i0_growth_base, E_film, ...
     i0_monolayer_base, i0_passive_base, cutoff, v_act)
     %=====================================================================
     % This function models a simple AFM tip scan
@@ -22,6 +22,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
     % Set the minimum oxide thickness as 10% of the minimum oxide thickness
     % in the z_pos array
     zmin1 = 0.1* min(mz);
+    b_cutoff = 0.25;    
     %=====================================================================
     %=====================================================================
     % Define material parameters for different simulation cases
@@ -262,7 +263,9 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         E0f = 1.225/node_height_nm;
                         
                         height_ratio = node_height_nm/node_base_height;
-                        eta_adj = (p_node/E_substrate)*(2*p_node*Vm)/(3*3*Faraday_Constant);
+                        
+                        eta_modifier = 0.35*(p_node/1.259e10); %E_substrate 0.35
+                        eta_adj = eta_modifier *(2*p_node*Vm)/(3*3*Faraday_Constant); %
                         
                         if height_ratio < 1.0
                             alpha = alpha0;                      
@@ -291,7 +294,8 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         E0f = 1.225/node_height_nm;
 
                         height_ratio = node_height_nm/node_base_height;
-                        eta_adj = (p_node/E_substrate)*(2*p_node*Vm)/(3*3*Faraday_Constant);
+                        eta_modifier = 0.35*(p_node/1.259e10); %E_substrate 0.35
+                        eta_adj = eta_modifier*(2*p_node*Vm)/(3*z*Faraday_Constant); %(p_node/E_substrate)*
                         
                         if height_ratio < 1.0                            
                             alpha = alpha0;                           
@@ -328,7 +332,8 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         delta_t = sim_time(idx_time,1) - init_time;
 
                         height_ratio = node_height_nm/node_base_height;
-                        eta_adj = (p_node/E_substrate)*(2*p_node*Vm)/(3*3*Faraday_Constant);
+                        eta_modifier = 0.35*(p_node/1.259e10); %E_substrate 0.35
+                        eta_adj = eta_modifier*(2*p_node*Vm)/(3*z*Faraday_Constant); %(p_node/E_substrate)*
                         E0f = 1.225/node_height_nm;
                         
                         if height_ratio < 1.0                           
@@ -372,6 +377,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         
                     else
                         % Node is outside the damage area and is undamaged
+                        node_height_nm = oxide(j).height;
                         i0_growth = 0.0;
                         alpha = alpha0;
                         i0_monolayer = 0.0;
@@ -385,10 +391,14 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                 g_plus = (alpha * z * Faraday_Constant)/ (R * T); 
                 stress_effect = (p_node * v_act)/(kb*T);
                 %=====================================================================
-                eta_adj = 0.0;
+%                 eta_adj = 0.0;
                 %=====================================================================
-                eta = eta_base + eta_adj;
+%                 eapp_base, ecorr_base
+                eta = eapp_base - (ecorr_base - eta_adj); %(eapp_base + eta_adj;
                 %=====================================================================
+                
+%                 E0f = height_ratio * 0.5; %
+                %=====================================================================               
                 % Check to see if the simulation time for the node is still
                 % within the node's rebuilding the oxide window.  If it is,
                 % keep going.  If it is now, transition to the passive
@@ -409,8 +419,8 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                     i_pass_t = passive_model(delta_t, i0_growth, i0_passive_base);
                     if temp__interface_current >= i_pass_t
                         delta_ct = sim_time(idx_time,1) - oxide(j).cutoff_time;
-                        b = 0.5;
-                        temp_pass_current = (oxide(j).cutoff_current - i_pass_t) * exp(-delta_ct/b) + i_pass_t;
+
+                        temp_pass_current = (oxide(j).cutoff_current - i_pass_t) * exp(-delta_ct/b_cutoff) + i_pass_t;
                         temp__interface_current = 0.0;
                     else
                         temp_pass_current = i_pass_t;
@@ -463,7 +473,8 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                     % within the node's rebuilding the oxide window.  If it is,
                     % keep going.  If it is now, transition to the passive
                     % background current for the node
-                    %=====================================================================                
+                    %=====================================================================  
+                    eta = eapp_base - (ecorr_base - eta_adj); %(eapp_base + eta_adj;
                     if delta_t <= cutoff
                         [temp__interface_current,num,denom] = i_growth(k_film, E0f, i0_growth, g_plus, stress_effect, eta, delta_t);
                         temp_mono_current = monolayer_model(delta_t,i0_monolayer);                            
@@ -479,8 +490,7 @@ function [tpos, surface_heights, tot_current_density, sim_time, a_contact] = ...
                         i_pass_t = passive_model(delta_t, i0_growth, i0_passive_base);
                         if temp__interface_current >= i_pass_t
                             delta_ct = sim_time(idx_time,1) - oxide(j).cutoff_time;
-                            b = 0.5;
-                            temp_pass_current = (oxide(j).cutoff_current - i_pass_t) * exp(-delta_ct/b) + i_pass_t;
+                            temp_pass_current = (oxide(j).cutoff_current - i_pass_t) * exp(-delta_ct/b_cutoff) + i_pass_t;
                             temp__interface_current = 0.0;
                         else
                             temp_pass_current = i_pass_t;

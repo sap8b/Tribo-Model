@@ -48,7 +48,7 @@ function multi_AFM_scan
     clear all;
     
     %=====================================================================
-    % Order of scans: $\sigma_{max}$ = 5.8, 8.6, 10.3, 11.25, 12.59 GPa    
+    % Order of experimental runs: $\sigma_{max}$ = 5.8, 8.6, 10.3, 11.25, 12.59 GPa    
     %=====================================================================
     total_exp_time = [86.0, 170.0, 180.0, 190.0, 210.0]; %s
     time_scanning =  [61.0, 112.0, 135.0, 143.0, 160.0]; %s
@@ -93,10 +93,11 @@ function multi_AFM_scan
     node_area_nm2 = delta_pos(1) * delta_pos(2); %nm2
     node_area_cm2 = node_area_nm2 * 1.0e-7 * 1.0e-7; % cm2
     %=====================================================================
-    % Define the AFM tip loads applied to the surface
+    % Define the AFM tip loads applied to the surface during the
+    % experimental runs
     %=====================================================================    
-    L_base = [0.09, 0.3, 0.495, 0.64, 0.9]; %uN
-    L_applied = L_base.*1.0e-6; % N
+    L_base_exp = [0.09, 0.3, 0.495, 0.64, 0.9]; %uN
+    L_applied_exp = L_base_exp.*1.0e-6; % N
     %=====================================================================
     %=====================================================================
     % Setup the electrochemical system parameters
@@ -105,7 +106,7 @@ function multi_AFM_scan
     Ecorr = -0.3; %VSCE
     % $\eta$ - represents the overpotential between the applied voltage and
     % the corrosion potential of the substrate
-    eta = Eapp - Ecorr; %V
+%     eta = Eapp - Ecorr; %V
     %=====================================================================    
     %=====================================================================
     % Morphologies
@@ -139,7 +140,7 @@ function multi_AFM_scan
     % $i_{0,monolayer}$ - represents the current due to the formation of 
     % initial monolayer of oxide
     %=====================================================================
-    i0_monolayer = [1.0, 1.0, 1.0, 1.0, 1.0] .*1.0e-4; %A/cm2
+    i0_monolayer = [1.0, 1.0, 1.0, 1.0, 1.0] .*1.0e-5; %A/cm2
 %     i0_growth_base = [12.0, 2.0, 0.07, 0.06, 0.03] .* 1.0e-10; %A/cm2
 %     i0_growth_base = [14.0, 3.0, 0.4, 14.0, 14.0] .* 1.0e-10; %A/cm2
     %=====================================================================
@@ -164,7 +165,7 @@ function multi_AFM_scan
     %=====================================================================
 %     E_film = [0.38, 0.6, 0.76, 0.80, 0.90];
 %     E_film = [0.5, 0.8, 0.9, 0.93, 0.935]; % V/nm
-    E_film = mdl_ef(L_base); % V/nm
+    E_film = mdl_ef(L_base_exp); % V/nm
     %=====================================================================
     %=====================================================================
     cutoff_values = [15, 15, 15, 15, 15].*(nodes(1)*(length_multiplier * dt));
@@ -180,8 +181,9 @@ function multi_AFM_scan
         sim(i).relaxation = relaxation_time(i);
         sim(i).exp_filename = exp_files(i);
         sim(i).output_filename = output_files(i);
-        sim(i).load = L_applied(i);
-        sim(i).eta = eta(2);
+        sim(i).load = L_applied_exp(i);
+        sim(i).eapp = Eapp(2);
+        sim(i).ecorr = Ecorr;
         sim(i).morphology = surface_morphology;
         sim(i).alpha = alpha0(i);
         sim(i).vact = v_act(i);
