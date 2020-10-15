@@ -128,7 +128,8 @@ function multi_AFM_scan
 %     alpha0 = [0.32, 0.385, 0.40, 0.42, 0.421];
 %     alpha0 = [0.32, 0.40, 0.49, 0.49, 0.51];
 %     alpha0 = [0.32, 0.37, 0.38, 0.392755, 0.405165];
-    alpha0 = [0.31, 0.31, 0.31, 0.31, 0.31];    
+    alpha0 = [0.31, 0.31, 0.31, 0.31, 0.31];
+%     alpha0 = [0.2, 0.2, 0.2, 0.2, 0.2];
 %     alpha0 = mdl_a_plus(L_base); 
 
     %=====================================================================
@@ -149,7 +150,8 @@ function multi_AFM_scan
 %     i0_growth_base = [10, 1.28, 0.5, 0.3, 0.2] .* node_area_cm2; %A/cm2
 %     i0_growth_base = [18, 1.5, 1.3, 0.7, 0.6] .* node_area_cm2; %A/cm2
 %     i0_growth_base = [24, 3, 3.5, 6, 9] .* node_area_cm2; %A/cm2
-    i0_growth_base = [11.0, 11.0, 11.0, 11.0, 11.0] .* node_area_cm2; %A/cm2
+%     i0_growth_base = [11.0, 11.0, 11.0, 11.0, 11.0] .* node_area_cm2; %A/cm2
+    i0_growth_base = [2.0, 2.0, 2.0, 2.0, 2.0] .* node_area_cm2.*1.0e3; %A/cm2
 %     i0_growth_base = mdl_ig(L_base).* node_area_cm2; %A/cm2
     %=====================================================================
     % $i_{passive} - represents the current from the passivated surface at
@@ -165,10 +167,17 @@ function multi_AFM_scan
     %=====================================================================
 %     E_film = [0.38, 0.6, 0.76, 0.80, 0.90];
 %     E_film = [0.5, 0.8, 0.9, 0.93, 0.935]; % V/nm
-    E_film = mdl_ef(L_base_exp); % V/nm
+%     E_film = mdl_ef(L_base_exp); % V/nm
+    U_base = [2.5, 2.5, 2.5, 2.5, 2.5].*1.0e-9; %m
+    i0_Me = [1.0, 1.0, 1.0, 1.0, 1.0].*1.0e-10; %A/m2
+    i0_base = [33.0, 33.0, 33.0, 33.0, 33.0].*1.0e-9; %A/m2
+%     i0_Me_b = i_me_corr(Eapp(1) - Ecorr);
+%     i0_Me = [i0_Me_b, i0_Me_b, i0_Me_b, i0_Me_b, i0_Me_b]; %A/m2
+    E_film_base = abs(mdl_ef(U_base, i0_base, i0_Me)); %V/nm
     %=====================================================================
     %=====================================================================
-    cutoff_values = [15, 15, 15, 15, 15].*(nodes(1)*(length_multiplier * dt));
+%     cutoff_values = [15, 15, 15, 15, 15].*(nodes(1)*(length_multiplier * dt));
+    cutoff_values = [15, 15, 15, 15, 15].*(nodes(1)*(length_multiplier * dt)); %.*100
     %=====================================================================
     %=====================================================================
     % Create a simulation parameter structure to assist with passing the
@@ -190,7 +199,9 @@ function multi_AFM_scan
         sim(i).i0_field = i0_growth_base(i);
         sim(i).i0_mono = i0_monolayer(i);
         sim(i).i0_pass = i0_pass(i);
-        sim(i).Ef = E_film(i);
+        sim(i).Ef = E_film_base(i);
+        sim(i).i0 = i0_base(i);
+        sim(i).i0_Me = i0_Me(i);
         sim(i).oxide_xyz = surface_dimensions;
         sim(i).delta_xyz = delta_pos;
         sim(i).comp_nodes = nodes;
@@ -201,7 +212,7 @@ function multi_AFM_scan
     end
     
     %=====================================================================
-    for idx_iteration = 1:number_of_scans
+    for idx_iteration = 5:5 %1:number_of_scans
         % Start check for wall-clock time
         tic        
         % Call the simulation/plotting routine for each set of simulation

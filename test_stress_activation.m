@@ -134,7 +134,7 @@ function test_stress_activation
     i_mdl1_str = strcat('i_{fit, Model 1}, E_{a} = ', num2str(mdl_nocutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_nocutoff_fits(2)), 'A^{3}');
     i_mdl2_str = strcat('i_{fit, Model 2}, E_{a} = ', num2str(mdl_cutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_cutoff_fits(2)), 'A^{3}');    
     
-    figure(1)
+    figure(20)
     hold on
     plot(stress,I_avg,'k+', 'MarkerSize',marker_size+2,'LineWidth',plot_line_width)
 %     plot(stress_no86,I_avg_model_nocutoff,'r^', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
@@ -151,7 +151,7 @@ function test_stress_activation
 %     legend('i_{avg}, Measured','i_{avg}, Model 1 - no cutoff', 'i_{avg}, Model 2 - \tau_{cutoff} = 48 s', ...
 %         i_exp_str,i_mdl1_str,i_mdl2_str,'Location','northwest')
     
-    legend('i_{avg}, Measured','i_{avg}, Model 2 - \tau_{cutoff} = 48 s', ...
+    legend('i_{avg}, Measured','i_{avg}, Model 2 - \tau_{cutoff} = 7500 s', ...
         i_exp_str,i_mdl2_str, 'i_{linear}','i_{guess}','Location','northwest')
     
     xlabel('Stress (Pa)', 'FontSize', axis_label_size,'FontWeight',font_weight)
