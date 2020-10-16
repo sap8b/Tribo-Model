@@ -125,10 +125,10 @@ function multi_AFM_scan
     % $\alpsha$0 - represents the generalized transfer coefficient for the
     % rate-determining step of the oxide formation reaction
     %=====================================================================
-%     alpha0 = [0.32, 0.385, 0.40, 0.42, 0.421];
+    alpha0 = [0.40, 0.40, 0.40, 0.40, 0.40];
 %     alpha0 = [0.32, 0.40, 0.49, 0.49, 0.51];
 %     alpha0 = [0.32, 0.37, 0.38, 0.392755, 0.405165];
-    alpha0 = [0.31, 0.31, 0.31, 0.31, 0.31];
+%     alpha0 = [0.31, 0.31, 0.31, 0.31, 0.31];
 %     alpha0 = [0.2, 0.2, 0.2, 0.2, 0.2];
 %     alpha0 = mdl_a_plus(L_base); 
 
@@ -151,7 +151,8 @@ function multi_AFM_scan
 %     i0_growth_base = [18, 1.5, 1.3, 0.7, 0.6] .* node_area_cm2; %A/cm2
 %     i0_growth_base = [24, 3, 3.5, 6, 9] .* node_area_cm2; %A/cm2
 %     i0_growth_base = [11.0, 11.0, 11.0, 11.0, 11.0] .* node_area_cm2; %A/cm2
-    i0_growth_base = [2.0, 2.0, 2.0, 2.0, 2.0] .* node_area_cm2.*1.0e3; %A/cm2
+%     i0_growth_base = [0.8, 0.1, 0.1, 0.1, 0.1] .* node_area_cm2.*1.0e3; %A/cm2
+    i0_growth_base = [0.1, 0.1, 0.1, 0.1, 0.1] .* node_area_cm2.*1.0e2; %A/cm2
 %     i0_growth_base = mdl_ig(L_base).* node_area_cm2; %A/cm2
     %=====================================================================
     % $i_{passive} - represents the current from the passivated surface at
@@ -177,7 +178,7 @@ function multi_AFM_scan
     %=====================================================================
     %=====================================================================
 %     cutoff_values = [15, 15, 15, 15, 15].*(nodes(1)*(length_multiplier * dt));
-    cutoff_values = [15, 15, 15, 15, 15].*(nodes(1)*(length_multiplier * dt)); %.*100
+    cutoff_values = [15, 15, 15, 15, 15].*(nodes(1)*(length_multiplier * dt)).*100; %
     %=====================================================================
     %=====================================================================
     % Create a simulation parameter structure to assist with passing the
@@ -212,7 +213,7 @@ function multi_AFM_scan
     end
     
     %=====================================================================
-    for idx_iteration = 5:5 %1:number_of_scans
+    for idx_iteration = 1:1 %1:number_of_scans
         % Start check for wall-clock time
         tic        
         % Call the simulation/plotting routine for each set of simulation

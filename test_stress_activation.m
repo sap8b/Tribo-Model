@@ -2,6 +2,7 @@ function test_stress_activation
     clc; 
     clear all;
     
+    dir = 'C:\Users\steve\OneDrive\Tribcorrosion\Matlab Scripts\Tribo-Model\'; %HoldOutputs\
     kb = 1.38e-23; %
     T = 298;
     Na = 6.02e23;
@@ -24,9 +25,10 @@ function test_stress_activation
     I_avg = zeros(1,nfiles);
     I_avg_with_cutoff = zeros(1,nfiles);
     for i = 1:nfiles
-        data = csvread(char(exp_files(i)));
+        data = csvread(strcat(dir,char(exp_files(i))));
         I_avg(1,i) = mean(data(:,2));
-        mdl_res = csvread(char(output_files(i)));
+        
+        mdl_res = csvread(strcat(dir,char(output_files(i))));
         I_avg_with_cutoff(1,i) = mean(mdl_res(:,2));
     end
     %=====================================================================
@@ -66,54 +68,54 @@ function test_stress_activation
     %=====================================================================
     % Fit the exp data
     %=====================================================================
-    b0 = [10.0e-15, v_act_test(1) 0.3];    
-    sp = [stress(1), stress(2), stress(3), stress(4)];
-    ip = [I_avg(1),I_avg(2), I_avg(3), I_avg(4)];    
-    mdl_tbc_600_data = fitnlm(sp,ip,fn,b0);
-    
-    disp(mdl_tbc_600_data)
-    y = feval(mdl_tbc_600_data,x);
+%     b0 = [10.0e-15, v_act_test(1) 0.3];    
+%     sp = [stress(1), stress(2), stress(3), stress(4)];
+%     ip = [I_avg(1),I_avg(2), I_avg(3), I_avg(4)];    
+%     mdl_tbc_600_data = fitnlm(sp,ip,fn,b0);
+%     
+%     disp(mdl_tbc_600_data)
+%     y = feval(mdl_tbc_600_data,x);
     %=====================================================================
     %=====================================================================
     % Fit the cutoff top model
-    b1 = [1.0e-14 9.0e-31 ((0.01/Na)*1000)/(kb*T)]; %[14.485e-15 v_act_test(2) -0.1];
-    sp = [stress(2), stress(3), stress(4), stress(5)]; %
-    ip = [I_avg_with_cutoff_top(2), I_avg_with_cutoff_top(3), I_avg_with_cutoff_top(4), I_avg_with_cutoff_top(5)]; %    
-    mdl_tbc_600_cutoff_top = fitnlm(sp,ip,fn,b1);
-    
-    disp(mdl_tbc_600_cutoff_top)    
-    y2 = feval(mdl_tbc_600_cutoff_top,x);
+%     b1 = [1.0e-14 9.0e-31 ((0.01/Na)*1000)/(kb*T)]; %[14.485e-15 v_act_test(2) -0.1];
+%     sp = [stress(2), stress(3), stress(4), stress(5)]; %
+%     ip = [I_avg_with_cutoff_top(2), I_avg_with_cutoff_top(3), I_avg_with_cutoff_top(4), I_avg_with_cutoff_top(5)]; %    
+%     mdl_tbc_600_cutoff_top = fitnlm(sp,ip,fn,b1);
+%     
+%     disp(mdl_tbc_600_cutoff_top)    
+%     y2 = feval(mdl_tbc_600_cutoff_top,x);
     %=====================================================================
     %=====================================================================
     % Fit the cutoff model    
     %=====================================================================
-    b2 = [1.0e-14 9.0e-31 ((0.01/Na)*1000)/(kb*T)];
-    sp = [ stress(2), stress(3), stress(4), stress(5)]; %
-    ip = [I_avg_with_cutoff(2), I_avg_with_cutoff(3), I_avg_with_cutoff(4), I_avg_with_cutoff(5)]; %
-    mdl_tbc_600_cutoff32 = fitnlm(sp,ip,fn,b2);
-    
-    disp(mdl_tbc_600_cutoff32)    
-    y3 = feval(mdl_tbc_600_cutoff32,x);  
+%     b2 = [1.0e-15 1.4474e-30 0.00040393];
+%     sp = [ stress(1), stress(2), stress(3), stress(4), stress(5)]; %
+%     ip = [I_avg_with_cutoff(1), I_avg_with_cutoff(2), I_avg_with_cutoff(3), I_avg_with_cutoff(4), I_avg_with_cutoff(5)]; %
+%     mdl_tbc_600_cutoff32 = fitnlm(sp,ip,fn,b2);
+%     
+%     disp(mdl_tbc_600_cutoff32)    
+%     y3 = feval(mdl_tbc_600_cutoff32,x);  
     %=====================================================================
     %=====================================================================
     % Linear fit
-    p = polyfit(sp,ip,1);
-    y4 = polyval(p,x);
+%     p = polyfit(sp,ip,1);
+%     y4 = polyval(p,x);
     %=====================================================================
         
-    exp_fit_Ea_coeff = mdl_tbc_600_data.Coefficients.Estimate(3);
-    exp_fit_Va_coeff = mdl_tbc_600_data.Coefficients.Estimate(2);
-    
-    mdl_nocutoff_fit_Ea_coeff = mdl_tbc_600_cutoff_top.Coefficients.Estimate(3);
-    mdl_nocutoff_fit_Va_coeff = mdl_tbc_600_cutoff_top.Coefficients.Estimate(2);
-    
-    mdl_cutoff_fit_Ea_coeff = mdl_tbc_600_cutoff32.Coefficients.Estimate(3);
-    mdl_cutoff_fit_Va_coeff = mdl_tbc_600_cutoff32.Coefficients.Estimate(2);
-    
-    exp_fits = [(-exp_fit_Ea_coeff*Na)/1000, (exp_fit_Va_coeff/conv_m3_A3)/(kb*T)].*(kb*T); %kJ/mol  A3
-    mdl_nocutoff_fits = [(-mdl_nocutoff_fit_Ea_coeff*Na)/1000, mdl_nocutoff_fit_Va_coeff/conv_m3_A3].*(kb*T); %kJ/mol  A3
-    v_act_fit = (mdl_cutoff_fit_Va_coeff/conv_m3_A3)/(kb*T);
-    mdl_cutoff_fits = [(-mdl_cutoff_fit_Ea_coeff*Na)/1000, v_act_fit].*(kb*T); %kJ/mol  A3
+%     exp_fit_Ea_coeff = mdl_tbc_600_data.Coefficients.Estimate(3);
+%     exp_fit_Va_coeff = mdl_tbc_600_data.Coefficients.Estimate(2);
+% %     
+% %     mdl_nocutoff_fit_Ea_coeff = mdl_tbc_600_cutoff_top.Coefficients.Estimate(3);
+% %     mdl_nocutoff_fit_Va_coeff = mdl_tbc_600_cutoff_top.Coefficients.Estimate(2);
+%     
+%     mdl_cutoff_fit_Ea_coeff = mdl_tbc_600_cutoff32.Coefficients.Estimate(3);
+%     mdl_cutoff_fit_Va_coeff = mdl_tbc_600_cutoff32.Coefficients.Estimate(2);
+%     
+%     exp_fits = [(-exp_fit_Ea_coeff*Na)/1000, (exp_fit_Va_coeff/conv_m3_A3)/(kb*T)].*(kb*T); %kJ/mol  A3
+% %     mdl_nocutoff_fits = [(-mdl_nocutoff_fit_Ea_coeff*Na)/1000, mdl_nocutoff_fit_Va_coeff/conv_m3_A3].*(kb*T); %kJ/mol  A3
+%     v_act_fit = (mdl_cutoff_fit_Va_coeff/conv_m3_A3)/(kb*T);
+%     mdl_cutoff_fits = [(-mdl_cutoff_fit_Ea_coeff*Na)/1000, v_act_fit].*(kb*T); %kJ/mol  A3
     
     i0_mdl = 1.0e-14;
     v_act_mdl = 9.0e-31;
@@ -121,38 +123,58 @@ function test_stress_activation
     s_term = (x.*v_act_mdl)./(kb*T); 
     e_term = (-e_act_act + s_term);
     expval = exp(e_term);
-    i_mdl_guess = i0_mdl.*expval;
+    i_mdl_guess_red = i0_mdl.*expval;
     
+    i0_mdl = 2.1434e-15; %1.0e-15;
+%     v_act_mdl = 17.0e-31; %1.822e-30;
+%     e_act_act = 1.0e-4; %0.00040393; %((0.01/Na)*1000)/(kb*T);
+%     s_term = (x.*v_act_mdl)./(kb*T); 
+%     e_term = (-e_act_act + s_term);
+    e_term = 3.4310E-10.*x;
+    expval = exp(e_term);
+    i_mdl_guess_blue = i0_mdl.*expval;
+    
+    %=====================================================================
     % Setup the output matrices
-    MatrixOutput1 = zeros(length(x), 2); 
-    MatrixOutput1(:,1) = x;
-    MatrixOutput1(:,2) = i_mdl_guess; 
-    % Create the output file and write the output matrix to it
-    writematrix(MatrixOutput1,'BestFitExpMdl.csv','Delimiter','comma')     
+    MatrixOutput1 = zeros(length(stress),4);
+    MatrixOutput1(:,1) = stress;
+    MatrixOutput1(:,2) = I_avg;
+    MatrixOutput1(:,3) = stress;
+    MatrixOutput1(:,4) = I_avg_with_cutoff;
+    writematrix(MatrixOutput1,'BestFitExpMdl.xls','Sheet',1)
     
-    i_exp_str = strcat('i_{fit, Exp}, E_{a} = ', num2str(exp_fits(1)), ' kJ/mol; V_{a} = ', num2str(exp_fits(2)), 'A^{3}');
-    i_mdl1_str = strcat('i_{fit, Model 1}, E_{a} = ', num2str(mdl_nocutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_nocutoff_fits(2)), 'A^{3}');
-    i_mdl2_str = strcat('i_{fit, Model 2}, E_{a} = ', num2str(mdl_cutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_cutoff_fits(2)), 'A^{3}');    
+    MatrixOutput2 = zeros(length(x), 2); 
+    MatrixOutput2(:,1) = x;
+    MatrixOutput2(:,2) = i_mdl_guess_red; 
+    % Create the output file and write the output matrix to it
+    writematrix(MatrixOutput2,'BestFitExpMdl.xls','Sheet',2)    
+    %=====================================================================
+    
+%     i_exp_str = strcat('i_{fit, Exp}, E_{a} = ', num2str(exp_fits(1)), ' kJ/mol; V_{a} = ', num2str(exp_fits(2)), 'A^{3}');
+%     i_mdl1_str = strcat('i_{fit, Model 1}, E_{a} = ', num2str(mdl_nocutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_nocutoff_fits(2)), 'A^{3}');
+%     i_mdl2_str = strcat('i_{fit, Model 2}, E_{a} = ', num2str(mdl_cutoff_fits(1)), ' kJ/mol; V_{a} = ', num2str(mdl_cutoff_fits(2)), 'A^{3}');    
     
     figure(20)
     hold on
-    plot(stress,I_avg,'k+', 'MarkerSize',marker_size+2,'LineWidth',plot_line_width)
+    plot(stress,I_avg,'r+', 'MarkerSize',marker_size+2,'LineWidth',plot_line_width)
 %     plot(stress_no86,I_avg_model_nocutoff,'r^', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
     plot(stress,I_avg_with_cutoff,'bo', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
 %     plot(stress,I_avg_with_cutoff_top,'g^','MarkerSize',marker_size,'LineWidth',plot_line_width)
     
 %     plot(x,y,':k', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
 %     plot(x,y2,'-g', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
-%     plot(x,y3,':b', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+    
 %     plot(x,y4,'-.b','MarkerSize',marker_size,'LineWidth',plot_line_width)
     
-    plot(x,i_mdl_guess,'-r', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+    plot(x,i_mdl_guess_red,'-r', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+    plot(x,i_mdl_guess_blue,'-b', 'MarkerSize',marker_size,'LineWidth',plot_line_width)
+    
     axis square
 %     legend('i_{avg}, Measured','i_{avg}, Model 1 - no cutoff', 'i_{avg}, Model 2 - \tau_{cutoff} = 48 s', ...
 %         i_exp_str,i_mdl1_str,i_mdl2_str,'Location','northwest')
     
-    legend('i_{avg}, Measured','i_{avg}, Model 2 - \tau_{cutoff} = 7500 s', ...
-        i_exp_str,i_mdl2_str, 'i_{linear}','i_{guess}','Location','northwest')
+%     legend('i_{avg}, Measured','i_{avg}, Model 2 - \tau_{cutoff} = 7500 s', ...
+%         i_exp_str,i_mdl2_str, 'i_{linear}','i_{guess}','Location','northwest')
     
     xlabel('Stress (Pa)', 'FontSize', axis_label_size,'FontWeight',font_weight)
     ylabel('I (A)', 'FontSize', axis_label_size,'FontWeight',font_weight)
@@ -165,7 +187,7 @@ function test_stress_activation
     ax.FontWeight = font_weight;
     ax.LineWidth = axis_line_width;
     ax.XMinorTick = 'on';  
-    legend boxoff
+%     legend boxoff
     
     hold off
     
