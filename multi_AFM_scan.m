@@ -50,8 +50,8 @@ function multi_AFM_scan
     %=====================================================================
     % Order of experimental runs: $\sigma_{max}$ = 5.8, 8.6, 10.3, 11.25, 12.59 GPa    
     %=====================================================================
-    total_exp_time = [86.0, 170.0, 180.0, 190.0, 210.0]; %s
-    time_scanning =  [61.0, 112.0, 135.0, 143.0, 160.0]; %s
+    total_exp_time = [210.0, 170.0, 180.0, 190.0, 210.0]; %s
+    time_scanning =  [144.0, 112.0, 135.0, 143.0, 160.0]; %s
     relaxation_time = total_exp_time - time_scanning;
     %=====================================================================
     %=====================================================================
@@ -96,7 +96,9 @@ function multi_AFM_scan
     % Define the AFM tip loads applied to the surface during the
     % experimental runs
     %=====================================================================    
-    L_base_exp = [0.09, 0.3, 0.495, 0.64, 0.9]; %uN
+%     L_base_exp = [0.09, 0.3, 0.495, 0.64, 0.9]; %uN
+    L_base_exp = [0.19, 0.37, 0.39, 0.42, 0.52]; %uN
+    
     L_applied_exp = L_base_exp.*1.0e-6; % N
     %=====================================================================
     %=====================================================================
@@ -125,11 +127,11 @@ function multi_AFM_scan
     % $\alpsha$0 - represents the generalized transfer coefficient for the
     % rate-determining step of the oxide formation reaction
     %=====================================================================
-    alpha0 = [0.40, 0.40, 0.40, 0.40, 0.40];
+%     alpha0 = [0.41, 0.41, 0.41, 0.41, 0.41];
 %     alpha0 = [0.32, 0.40, 0.49, 0.49, 0.51];
 %     alpha0 = [0.32, 0.37, 0.38, 0.392755, 0.405165];
-%     alpha0 = [0.31, 0.31, 0.31, 0.31, 0.31];
-%     alpha0 = [0.2, 0.2, 0.2, 0.2, 0.2];
+    alpha0 = [0.5, 0.5, 0.5, 0.5, 0.5];
+%     alpha0 = [0.35, 0.35, 0.35, 0.35, 0.35];
 %     alpha0 = mdl_a_plus(L_base); 
 
     %=====================================================================
@@ -149,11 +151,12 @@ function multi_AFM_scan
     %=====================================================================
 %     i0_growth_base = [10, 1.28, 0.5, 0.3, 0.2] .* node_area_cm2; %A/cm2
 %     i0_growth_base = [18, 1.5, 1.3, 0.7, 0.6] .* node_area_cm2; %A/cm2
-%     i0_growth_base = [24, 3, 3.5, 6, 9] .* node_area_cm2; %A/cm2
-%     i0_growth_base = [11.0, 11.0, 11.0, 11.0, 11.0] .* node_area_cm2; %A/cm2
+%     i0_growth_base = [24, 3, 3.5, 6, 9] .* node_area_cm2; %A/cm2    
 %     i0_growth_base = [0.8, 0.1, 0.1, 0.1, 0.1] .* node_area_cm2.*1.0e3; %A/cm2
-    i0_growth_base = [0.1, 0.1, 0.1, 0.1, 0.1] .* node_area_cm2.*1.0e2; %A/cm2
+%     i0_growth_base = [10, 0.5, 0.5, 0.5, 0.5] .* node_area_cm2.*1.0e3; %A/cm2
 %     i0_growth_base = mdl_ig(L_base).* node_area_cm2; %A/cm2
+    i0_growth_base = [11.0, 11.0, 11.0, 11.0, 11.0] .* node_area_cm2; %A/cm2
+%     i0_growth_base = [20.0, 20.0, 20.0, 20.0, 20.0] .* node_area_cm2; %A/cm2
     %=====================================================================
     % $i_{passive} - represents the current from the passivated surface at
     % long times
