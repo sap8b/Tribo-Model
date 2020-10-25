@@ -216,7 +216,7 @@ function multi_AFM_scan
     end
     
     %=====================================================================
-    for idx_iteration = 1:1 %1:number_of_scans
+    for idx_iteration = 1:number_of_scans
         % Start check for wall-clock time
         tic        
         % Call the simulation/plotting routine for each set of simulation
